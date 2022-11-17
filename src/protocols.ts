@@ -19,6 +19,15 @@ export type validCEPAdress = {
   uf: string;
 };
 
+export type AddressEnrollment = {
+  logradouro: string;
+  complemento: string;
+  bairro: string;
+  cidade: string;
+  uf: string;
+  error?: string;
+};
+
 export type RequestError = {
   status: number;
   data: object | null;
