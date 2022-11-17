@@ -20,6 +20,24 @@ export type AddressEnrollment = {
   error?: string;
 };
 
+export type UserTicket = {
+  id: number;
+  status: string;
+  ticketTypeId: number;
+  enrollmentId: number;
+  TicketType: {
+    id: number;
+    name: string;
+    price: number;
+    isRemote: boolean;
+    includesHotel: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+  };
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 export type RequestError = {
   status: number;
   data: object | null;
