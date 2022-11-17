@@ -11,14 +11,6 @@ export type ViaCEPAddress = {
   uf: string;
 };
 
-export type validCEPAdress = {
-  logradouro: string;
-  complemento: string;
-  bairro: string;
-  cidade: string;
-  uf: string;
-};
-
 export type AddressEnrollment = {
   logradouro: string;
   complemento: string;
