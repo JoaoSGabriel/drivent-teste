@@ -1,6 +1,6 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import httpStatus from "http-status";
-import paymentsService from "@/services/payments-service";
+import paymentsService, { updatePayment } from "@/services/payments-service";
 import { AuthenticatedRequest } from "@/middlewares";
 import { requestError } from "@/errors";
 
@@ -11,7 +11,7 @@ export async function getPaymentsController(req: AuthenticatedRequest, res: Resp
   const { userId } = req;
 
   try {
-    const payment = await paymentsService.assignTicketAsPaid(userId, Number(ticketId));
+    const payment = await paymentsService.getPaymentByTicketId(userId, Number(ticketId));
     return res.status(httpStatus.OK).send(payment);
   } catch (error) {
     if (error.name === "NotFoundError") {
@@ -24,10 +24,19 @@ export async function getPaymentsController(req: AuthenticatedRequest, res: Resp
   }
 }
 
-export async function postPaymentsController(req: Request, res: Response) {
+export async function postPaymentsController(req: AuthenticatedRequest, res: Response) {
+  const { userId } = req;
+
   try {
-    return res.sendStatus(httpStatus.OK);
+    const upsertPayment = await paymentsService.createPaymentProcess(req.body, userId);
+    return res.status(httpStatus.OK).send(upsertPayment);
   } catch (error) {
-    return res.sendStatus(httpStatus.NOT_FOUND);
+    if (error.name === "NotFoundError") {
+      return res.sendStatus(httpStatus.NOT_FOUND);
+    }
+    if (error.name === "UnauthorizedError") {
+      return res.sendStatus(httpStatus.UNAUTHORIZED);
+    }
+    return res.sendStatus(httpStatus.INTERNAL_SERVER_ERROR);
   }
 }
