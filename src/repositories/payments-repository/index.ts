@@ -19,6 +19,17 @@ async function findPaymentByTicketId(ticketId: number) {
   });
 }
 
-const paymentsRepository = { findTicketById, findPaymentByTicketId };
+async function updateTicketStatus(ticketId: number) {
+  return prisma.ticket.update({
+    where: {
+      id: ticketId,
+    },
+    data: {
+      status: "PAID",
+    },
+  });
+}
+
+const paymentsRepository = { findTicketById, findPaymentByTicketId, updateTicketStatus };
 
 export default paymentsRepository;
