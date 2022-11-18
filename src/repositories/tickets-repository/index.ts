@@ -1,7 +1,6 @@
 import { prisma } from "@/config";
 import { UserTicket } from "@/protocols";
-import { Ticket, TicketType } from "@prisma/client";
-import dayjs from "dayjs";
+import { TicketType } from "@prisma/client";
 
 async function getTicketsTypes(): Promise<TicketType[]> {
   return prisma.ticketType.findMany();
@@ -28,12 +27,12 @@ async function findUserEnrollment(userId: number) {
   });
 }
 
-async function createNewTicket(ticketTypeId: number, enrollmentId: number): Promise<Ticket> {
+async function createNewTicket(ticketTypeId: number, enrollmentId: number): Promise<UserTicket> {
   return prisma.ticket.create({
     data: {
-      status: "RESERVED",
       ticketTypeId: ticketTypeId,
       enrollmentId: enrollmentId,
+      status: "RESERVED",
     },
     include: {
       TicketType: true,

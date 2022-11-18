@@ -15,11 +15,13 @@ async function showAllTickets(userId: number) {
   return ticket;
 }
 
-async function createUserTicket(userId: number) {
+async function createUserTicket(userId: number, ticketTypeId: number) {
   const enrollment = await ticketsRepository.findUserEnrollment(userId);
   if (!enrollment) throw notFoundError();
 
-  return await ticketsRepository.createNewTicket(userId, enrollment.id);
+  const newTicket = await ticketsRepository.createNewTicket(ticketTypeId, enrollment.id);
+
+  return newTicket;
 }
 
 const ticketService = { showAllTicketsTypes, showAllTickets, createUserTicket };
