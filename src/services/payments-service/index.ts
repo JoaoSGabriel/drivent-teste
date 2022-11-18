@@ -10,7 +10,9 @@ async function assignTicketAsPaid(userId: number, ticketId: number) {
     throw unauthorizedError();
   }
 
-  return ticketData;
+  const payment = await paymentsRepository.findPaymentByTicketId(ticketId);
+
+  return payment;
 }
 
 const paymentsService = { assignTicketAsPaid };
