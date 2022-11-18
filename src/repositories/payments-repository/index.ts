@@ -1,4 +1,5 @@
 import { prisma } from "@/config";
+import { updatePayment } from "@/protocols";
 
 async function findTicketById(ticketId: number) {
   return prisma.ticket.findFirst({
@@ -7,6 +8,11 @@ async function findTicketById(ticketId: number) {
     },
     include: {
       Enrollment: true,
+      TicketType: {
+        select: {
+          price: true,
+        },
+      },
     },
   });
 }
@@ -30,6 +36,17 @@ async function updateTicketStatus(ticketId: number) {
   });
 }
 
-const paymentsRepository = { findTicketById, findPaymentByTicketId, updateTicketStatus };
+async function createPaidPayment(body: updatePayment, value: number) {
+  return prisma.payment.create({
+    data: {
+      ticketId: body.ticketId,
+      value: value,
+      cardIssuer: body.cardData.issuer,
+      cardLastDigits: body.cardData.number.slice(11),
+    },
+  });
+}
+
+const paymentsRepository = { findTicketById, findPaymentByTicketId, updateTicketStatus, createPaidPayment };
 
 export default paymentsRepository;

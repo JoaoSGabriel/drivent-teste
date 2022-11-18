@@ -1,4 +1,5 @@
 import { notFoundError, unauthorizedError } from "@/errors";
+import { updatePayment } from "@/protocols";
 import paymentsRepository from "@/repositories/payments-repository";
 
 async function getPaymentByTicketId(userId: number, ticketId: number) {
@@ -10,13 +11,14 @@ async function getPaymentByTicketId(userId: number, ticketId: number) {
 }
 
 async function createPaymentProcess(body: updatePayment, userId: number) {
-  await findTicket(userId, body.ticketId);
+  const paymentData = await findTicket(userId, body.ticketId);
 
   await paymentsRepository.updateTicketStatus(body.ticketId);
 
   //TODO - implement a create repository
+  const payment = await paymentsRepository.createPaidPayment(body, paymentData);
 
-  return;
+  return payment;
 }
 
 async function findTicket(userId: number, ticketId: number) {
@@ -27,19 +29,10 @@ async function findTicket(userId: number, ticketId: number) {
   if (ticketData.Enrollment.userId !== userId) {
     throw unauthorizedError();
   }
+
+  return ticketData.TicketType.price;
 }
 
 const paymentsService = { getPaymentByTicketId, createPaymentProcess };
-
-export type updatePayment = {
-  ticketId: number;
-  cardData: {
-    issuer: string;
-    number: number;
-    name: string;
-    expirationDate: Date;
-    cvv: number;
-  };
-};
 
 export default paymentsService;

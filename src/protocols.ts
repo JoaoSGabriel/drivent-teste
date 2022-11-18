@@ -38,6 +38,17 @@ export type UserTicket = {
   updatedAt: Date;
 };
 
+export type updatePayment = {
+  ticketId: number;
+  cardData: {
+    issuer: string;
+    number: string;
+    name: string;
+    expirationDate: Date;
+    cvv: number;
+  };
+};
+
 export type RequestError = {
   status: number;
   data: object | null;
