@@ -23,10 +23,16 @@ export async function getTickets(req: AuthenticatedRequest, res: Response) {
   }
 }
 
-export async function postTickets(_req: Request, res: Response) {
+export async function postTickets(req: AuthenticatedRequest, res: Response) {
+  const { userId } = req;
+
   try {
-    return res.status(httpStatus.OK).send({});
+    const newTicket = await ticketService.createUserTicket(userId);
+    return res.status(httpStatus.CREATED).send(newTicket);
   } catch (error) {
-    return res.sendStatus(httpStatus.NOT_FOUND);
+    if (error.name === "NotFoundError") {
+      return res.sendStatus(httpStatus.NOT_FOUND);
+    }
+    return res.sendStatus(httpStatus.INTERNAL_SERVER_ERROR);
   }
 }

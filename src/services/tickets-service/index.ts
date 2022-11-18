@@ -15,6 +15,13 @@ async function showAllTickets(userId: number) {
   return ticket;
 }
 
-const ticketService = { showAllTicketsTypes, showAllTickets };
+async function createUserTicket(userId: number) {
+  const enrollment = await ticketsRepository.findUserEnrollment(userId);
+  if (!enrollment) throw notFoundError();
+
+  return await ticketsRepository.createNewTicket(userId, enrollment.id);
+}
+
+const ticketService = { showAllTicketsTypes, showAllTickets, createUserTicket };
 
 export default ticketService;
