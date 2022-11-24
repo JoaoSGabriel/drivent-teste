@@ -40,7 +40,7 @@ export async function createFullyTicketType() {
     data: {
       name: faker.name.findName(),
       price: faker.datatype.number(),
-      isRemote: true,
+      isRemote: false,
       includesHotel: true,
     },
   });

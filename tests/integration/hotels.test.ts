@@ -14,6 +14,7 @@ import {
   createRemoteTicketType,
   createFullyTicketType,
   createHotel,
+  createHotelRoom,
 } from "../factories";
 import { cleanDb, generateValidToken } from "../helpers";
 
@@ -61,7 +62,7 @@ describe("GET /hotels", () => {
       expect(response.status).toBe(httpStatus.UNAUTHORIZED);
     });
 
-    it("should respond with status 401 when TicketType is not assign TRUE for includesHotel", async () => {
+    it("should respond with status 401 when Ticket doesnt includes hotel", async () => {
       const user = await createUser();
       const token = await generateValidToken(user);
       const enrollment = await createEnrollmentWithAddress(user);
@@ -73,7 +74,7 @@ describe("GET /hotels", () => {
       expect(response.status).toBe(httpStatus.UNAUTHORIZED);
     });
 
-    it("should respond with status 401 when TicketType is not assign FALSE for isRemote", async () => {
+    it("should respond with status 401 when is a Remote Event", async () => {
       const user = await createUser();
       const token = await generateValidToken(user);
       const enrollment = await createEnrollmentWithAddress(user);
@@ -150,19 +151,48 @@ describe("GET /hotels/:hotelsId", () => {
 
   describe("When token is valid", () => {
     it("should respond with status 400 if query param hotelId is missing", async () => {
-      return;
+      const user = await createUser();
+      const token = await generateValidToken(user);
+
+      const response = await server.get("/hotels").set("Authorization", `Bearer ${token}`);
+
+      expect(response.status).toBe(httpStatus.BAD_REQUEST);
     });
 
     it("should respond with status 404 when given hotel doesnt exist", async () => {
-      return;
-    });
+      const user = await createUser();
+      const token = await generateValidToken(user);
+      await createHotel();
 
-    it("should respond with empty array when there are no hotels rooms", async () => {
-      return;
+      const response = await server.get("/hotels/1").set("Authorization", `Bearer ${token}`);
+
+      expect(response.status).toBe(httpStatus.NOT_FOUND);
     });
 
     it("should respond with status 200 and hotel rooms data", async () => {
-      return;
+      const user = await createUser();
+      const token = await generateValidToken(user);
+      const hotel = await createHotel();
+      const room = await createHotelRoom(hotel.id);
+
+      const response = await server.get(`/hotels/${hotel.id}`).set("Authorization", `Bearer ${token}`);
+
+      expect(response.status).toBe(httpStatus.OK);
+      expect(response.body).toEqual({
+        id: hotel.id,
+        name: hotel.name,
+        image: hotel.image,
+        rooms: {
+          id: room.id,
+          name: room.name,
+          capacity: room.capacity,
+          hotelId: room.hotelId,
+          createdAt: expect.any(String),
+          updatedAt: expect.any(String),
+        },
+        createdAt: expect.any(String),
+        updatedAt: expect.any(String),
+      });
     });
   });
 });
