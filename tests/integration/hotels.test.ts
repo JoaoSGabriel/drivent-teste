@@ -1,5 +1,4 @@
 import app, { init } from "@/app";
-import { prisma } from "@/config";
 import { TicketStatus } from "@prisma/client";
 import faker from "@faker-js/faker";
 import httpStatus from "http-status";
@@ -20,6 +19,9 @@ import { cleanDb, generateValidToken } from "../helpers";
 
 beforeAll(async () => {
   await init();
+});
+
+beforeEach(async () => {
   await cleanDb();
 });
 
@@ -154,7 +156,7 @@ describe("GET /hotels/:hotelsId", () => {
       const user = await createUser();
       const token = await generateValidToken(user);
 
-      const response = await server.get("/hotels").set("Authorization", `Bearer ${token}`);
+      const response = await server.get("/hotels/").set("Authorization", `Bearer ${token}`);
 
       expect(response.status).toBe(httpStatus.BAD_REQUEST);
     });
@@ -182,14 +184,16 @@ describe("GET /hotels/:hotelsId", () => {
         id: hotel.id,
         name: hotel.name,
         image: hotel.image,
-        rooms: {
-          id: room.id,
-          name: room.name,
-          capacity: room.capacity,
-          hotelId: room.hotelId,
-          createdAt: expect.any(String),
-          updatedAt: expect.any(String),
-        },
+        Rooms: [
+          {
+            id: room.id,
+            name: room.name,
+            capacity: room.capacity,
+            hotelId: room.hotelId,
+            createdAt: expect.any(String),
+            updatedAt: expect.any(String),
+          },
+        ],
         createdAt: expect.any(String),
         updatedAt: expect.any(String),
       });
