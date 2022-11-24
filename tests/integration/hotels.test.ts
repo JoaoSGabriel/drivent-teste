@@ -41,7 +41,25 @@ describe("GET /hotels", () => {
   });
 
   describe("When token is valid", () => {
-    return;
+    it("should respond with status 401 when Ticket is not assign PAID for status", async () => {
+      return;
+    });
+
+    it("should respond with status 401 when TicketType is not assign TRUE for includesHotel", async () => {
+      return;
+    });
+
+    it("should respond with status 401 when TicketType is not assign FALSE for isRemote", async () => {
+      return;
+    });
+
+    it("should respond with empty array when there are no hotels", async () => {
+      return;
+    });
+
+    it("should respond with status 200 and with existing hotels data", async () => {
+      return;
+    });
   });
 });
 
@@ -71,6 +89,20 @@ describe("GET /hotels/:hotelsId", () => {
   });
 
   describe("When token is valid", () => {
-    return;
+    it("should respond with status 400 if query param hotelId is missing", async () => {
+      return;
+    });
+
+    it("should respond with status 404 when given hotel doesnt exist", async () => {
+      return;
+    });
+
+    it("should respond with empty array when there are no hotels rooms", async () => {
+      return;
+    });
+
+    it("should respond with status 200 and hotel rooms data", async () => {
+      return;
+    });
   });
 });
