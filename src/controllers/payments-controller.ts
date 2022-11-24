@@ -1,42 +1,49 @@
+import { AuthenticatedRequest } from "@/middlewares";
+import paymentService from "@/services/payments-service";
 import { Response } from "express";
 import httpStatus from "http-status";
-import paymentsService from "@/services/payments-service";
-import { AuthenticatedRequest } from "@/middlewares";
-import { requestError } from "@/errors";
 
-export async function getPaymentsController(req: AuthenticatedRequest, res: Response) {
-  const { ticketId } = req.query;
-  if (!ticketId) throw requestError(400, "make bad request");
-
-  const { userId } = req;
-
+export async function getPaymentByTicketId(req: AuthenticatedRequest, res: Response) {
   try {
-    const payment = await paymentsService.getPaymentByTicketId(userId, Number(ticketId));
-    return res.status(httpStatus.OK).send(payment);
-  } catch (error) {
-    if (error.name === "NotFoundError") {
+    const ticketId = Number(req.query.ticketId);
+    const { userId } = req;
+
+    if (!ticketId) {
+      return res.sendStatus(httpStatus.BAD_REQUEST);
+    }
+    const payment = await paymentService.getPaymentByTicketId(userId, ticketId);
+
+    if (!payment) {
       return res.sendStatus(httpStatus.NOT_FOUND);
     }
+    return res.status(httpStatus.OK).send(payment);
+  } catch (error) {
     if (error.name === "UnauthorizedError") {
       return res.sendStatus(httpStatus.UNAUTHORIZED);
     }
-    return res.sendStatus(httpStatus.INTERNAL_SERVER_ERROR);
+    return res.sendStatus(httpStatus.NOT_FOUND);
   }
 }
 
-export async function postPaymentsController(req: AuthenticatedRequest, res: Response) {
-  const { userId } = req;
-
+export async function paymentProcess(req: AuthenticatedRequest, res: Response) {
   try {
-    const upsertPayment = await paymentsService.createPaymentProcess(req.body, userId);
-    return res.status(httpStatus.OK).send(upsertPayment);
-  } catch (error) {
-    if (error.name === "NotFoundError") {
+    const { userId } = req;
+    const { ticketId, cardData } = req.body;
+
+    if (!ticketId || !cardData) {
+      return res.sendStatus(httpStatus.BAD_REQUEST);
+    }
+    const payment = await paymentService.paymentProcess(ticketId, userId, cardData);
+
+    if (!payment) {
       return res.sendStatus(httpStatus.NOT_FOUND);
     }
+
+    return res.status(httpStatus.OK).send(payment);
+  } catch (error) {
     if (error.name === "UnauthorizedError") {
       return res.sendStatus(httpStatus.UNAUTHORIZED);
     }
-    return res.sendStatus(httpStatus.INTERNAL_SERVER_ERROR);
+    return res.sendStatus(httpStatus.NOT_FOUND);
   }
 }

@@ -1,38 +1,62 @@
 import { notFoundError, unauthorizedError } from "@/errors";
-import { updatePayment } from "@/protocols";
-import paymentsRepository from "@/repositories/payments-repository";
+import paymentRepository, { PaymentParams } from "@/repositories/payment-repository";
+import ticketRepository from "@/repositories/ticket-repository";
+import enrollmentRepository from "@/repositories/enrollment-repository";
 
-async function getPaymentByTicketId(userId: number, ticketId: number) {
-  await findTicket(userId, ticketId);
+async function verifyTicketAndEnrollment(ticketId: number, userId: number) {
+  const ticket = await ticketRepository.findTickeyById(ticketId);
 
-  const payment = await paymentsRepository.findPaymentByTicketId(ticketId);
-
-  return payment;
-}
-
-async function createPaymentProcess(body: updatePayment, userId: number) {
-  const paymentData = await findTicket(userId, body.ticketId);
-
-  await paymentsRepository.updateTicketStatus(body.ticketId);
-
-  //TODO - implement a create repository
-  const payment = await paymentsRepository.createPaidPayment(body, paymentData);
-
-  return payment;
-}
-
-async function findTicket(userId: number, ticketId: number) {
-  const ticketData = await paymentsRepository.findTicketById(ticketId);
-  if (!ticketData) {
+  if (!ticket) {
     throw notFoundError();
   }
-  if (ticketData.Enrollment.userId !== userId) {
+  const enrollment = await enrollmentRepository.findById(ticket.enrollmentId);
+
+  if (enrollment.userId !== userId) {
     throw unauthorizedError();
   }
-
-  return ticketData.TicketType.price;
 }
 
-const paymentsService = { getPaymentByTicketId, createPaymentProcess };
+async function getPaymentByTicketId(userId: number, ticketId: number) {
+  await verifyTicketAndEnrollment(ticketId, userId);
 
-export default paymentsService;
+  const payment = await paymentRepository.findPaymentByTicketId(ticketId);
+
+  if (!payment) {
+    throw notFoundError();
+  }
+  return payment;
+}
+
+async function paymentProcess(ticketId: number, userId: number, cardData: CardPaymentParams) {
+  await verifyTicketAndEnrollment(ticketId, userId);
+
+  const ticket = await ticketRepository.findTickeWithTypeById(ticketId);
+
+  const paymentData = {
+    ticketId,
+    value: ticket.TicketType.price,
+    cardIssuer: cardData.issuer,
+    cardLastDigits: cardData.number.toString().slice(-4),
+  };
+
+  const payment = await paymentRepository.createPayment(ticketId, paymentData);
+
+  await ticketRepository.ticketProcessPayment(ticketId);
+
+  return payment;
+}
+
+export type CardPaymentParams = {
+  issuer: string;
+  number: number;
+  name: string;
+  expirationDate: Date;
+  cvv: number;
+};
+
+const paymentService = {
+  getPaymentByTicketId,
+  paymentProcess,
+};
+
+export default paymentService;

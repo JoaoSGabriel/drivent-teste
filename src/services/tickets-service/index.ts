@@ -1,29 +1,53 @@
 import { notFoundError } from "@/errors";
-import ticketsRepository from "@/repositories/tickets-repository";
+import ticketRepository from "@/repositories/ticket-repository";
+import enrollmentRepository from "@/repositories/enrollment-repository";
+import { TicketStatus } from "@prisma/client";
 
-async function showAllTicketsTypes() {
-  const ticketsType = await ticketsRepository.getTicketsTypes();
-  if (ticketsType.length !== 0) return ticketsType;
-  return [];
+async function getTicketTypes() {
+  const ticketTypes = await ticketRepository.findTicketTypes();
+
+  if (!ticketTypes) {
+    throw notFoundError();
+  }
+  return ticketTypes;
 }
 
-async function showAllTickets(userId: number) {
-  const ticket = await ticketsRepository.getTickets(userId);
-
-  if (!ticket.enrollmentId || !ticket) throw notFoundError();
+async function getTicketByUserId(userId: number) {
+  const enrollment = await enrollmentRepository.findWithAddressByUserId(userId);
+  if (!enrollment) {
+    throw notFoundError();
+  }
+  const ticket = await ticketRepository.findTicketByEnrollmentId(enrollment.id);
+  if (!ticket) {
+    throw notFoundError();
+  }
 
   return ticket;
 }
 
-async function createUserTicket(userId: number, ticketTypeId: number) {
-  const enrollment = await ticketsRepository.findUserEnrollment(userId);
-  if (!enrollment) throw notFoundError();
+async function createTicket(userId: number, ticketTypeId: number) {
+  const enrollment = await enrollmentRepository.findWithAddressByUserId(userId);
+  if (!enrollment) {
+    throw notFoundError();
+  }
 
-  const newTicket = await ticketsRepository.createNewTicket(ticketTypeId, enrollment.id);
+  const ticketData = {
+    ticketTypeId,
+    enrollmentId: enrollment.id,
+    status: TicketStatus.RESERVED,
+  };
 
-  return newTicket;
+  await ticketRepository.createTicket(ticketData);
+
+  const ticket = await ticketRepository.findTicketByEnrollmentId(enrollment.id);
+
+  return ticket;
 }
 
-const ticketService = { showAllTicketsTypes, showAllTickets, createUserTicket };
+const ticketService = {
+  getTicketTypes,
+  getTicketByUserId,
+  createTicket,
+};
 
 export default ticketService;
