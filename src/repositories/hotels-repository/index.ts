@@ -1,5 +1,13 @@
 import { prisma } from "@/config";
 
+async function getEnrollmentbyUserId(userId: number) {
+  return await prisma.enrollment.findFirst({
+    where: {
+      userId,
+    },
+  });
+}
+
 async function findTicketByUserId(userId: number) {
   return await prisma.ticket.findFirst({
     where: {
@@ -29,6 +37,7 @@ async function getAllRoomsFromHotel(hotelId: number) {
 }
 
 const hotelsRepository = {
+  getEnrollmentbyUserId,
   findTicketByUserId,
   getAllHotels,
   getAllRoomsFromHotel,

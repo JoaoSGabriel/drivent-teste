@@ -1,12 +1,21 @@
 import { notFoundError, requestError, unauthorizedError } from "@/errors";
 import hotelsRepository from "@/repositories/hotels-repository";
-import { BAD_REQUEST } from "http-status";
 
 async function showAllHotels(userId: number) {
+  const enrollment = await hotelsRepository.getEnrollmentbyUserId(userId);
+  if (!enrollment) {
+    throw requestError(403, "Forbidden");
+  }
+
   const ticket = await hotelsRepository.findTicketByUserId(userId);
 
-  if (ticket.status !== "PAID" || ticket.TicketType.isRemote !== false || ticket.TicketType.includesHotel !== true) {
-    throw unauthorizedError();
+  if (
+    !ticket ||
+    ticket.status !== "PAID" ||
+    ticket.TicketType.isRemote !== false ||
+    ticket.TicketType.includesHotel !== true
+  ) {
+    throw requestError(403, "Forbidden");
   }
 
   const hotels = await hotelsRepository.getAllHotels();
