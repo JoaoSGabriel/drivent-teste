@@ -1,38 +1,43 @@
-import { notFoundError, requestError, unauthorizedError } from "@/errors";
-import hotelsRepository from "@/repositories/hotels-repository";
+import hotelRepository from "@/repositories/hotel-repository";
+import enrollmentRepository from "@/repositories/enrollment-repository";
+import ticketRepository from "@/repositories/ticket-repository";
+import { notFoundError } from "@/errors";
+import { cannotListHotelsError } from "@/errors/cannot-list-hotels-error";
 
-async function showAllHotels(userId: number) {
-  const enrollment = await hotelsRepository.getEnrollmentbyUserId(userId);
+async function listHotels(userId: number) {
+  //Tem enrollment?
+  const enrollment = await enrollmentRepository.findWithAddressByUserId(userId);
   if (!enrollment) {
-    throw requestError(403, "Forbidden");
+    throw notFoundError();
   }
+  //Tem ticket pago isOnline false e includesHotel true
+  const ticket = await ticketRepository.findTicketByEnrollmentId(enrollment.id);
 
-  const ticket = await hotelsRepository.findTicketByUserId(userId);
-
-  if (
-    !ticket ||
-    ticket.status !== "PAID" ||
-    ticket.TicketType.isRemote !== false ||
-    ticket.TicketType.includesHotel !== true
-  ) {
-    throw requestError(403, "Forbidden");
+  if (!ticket || ticket.status === "RESERVED" || ticket.TicketType.isRemote || !ticket.TicketType.includesHotel) {
+    throw cannotListHotelsError();
   }
+}
 
-  const hotels = await hotelsRepository.getAllHotels();
+async function getHotels(userId: number) {
+  await listHotels(userId);
 
+  const hotels = await hotelRepository.findHotels();
   return hotels;
 }
 
-async function showAllHotelRooms(hotelId: number) {
-  const rooms = await hotelsRepository.getAllRoomsFromHotel(hotelId);
-  if (!rooms) throw notFoundError();
+async function getHotelsWithRooms(userId: number, hotelId: number) {
+  await listHotels(userId);
+  const hotel = await hotelRepository.findRoomsByHotelId(hotelId);
 
-  return rooms;
+  if (!hotel) {
+    throw notFoundError();
+  }
+  return hotel;
 }
 
 const hotelService = {
-  showAllHotels,
-  showAllHotelRooms,
+  getHotels,
+  getHotelsWithRooms,
 };
 
 export default hotelService;
