@@ -62,8 +62,5 @@ export async function putBooking(req: AuthenticatedRequest, res: Response) {
     if (error.name === "CannotListHotelsError") {
       return res.sendStatus(httpStatus.FORBIDDEN);
     }
-    console.log(error.message);
-    res.sendStatus(500);
-    return;
   }
 }
