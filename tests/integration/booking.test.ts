@@ -54,6 +54,51 @@ describe("GET /booking", () => {
   });
 
   describe("when token is valid", () => {
+    it("should respond with status 404 if user doesnt have a enrollment", async () => {
+      const user = await createUser();
+      const token = await generateValidToken(user);
+
+      const response = await server.get("/booking").set("Authorization", `Bearer ${token}`);
+
+      expect(response.status).toBe(httpStatus.NOT_FOUND);
+    });
+
+    it("should respond with status 403 if ticket status is not assign as PAID", async () => {
+      const user = await createUser();
+      const token = await generateValidToken(user);
+      const enrollment = await createEnrollmentWithAddress(user);
+      const ticketType = await createTicketTypeWithHotel();
+      await createTicket(enrollment.id, ticketType.id, TicketStatus.RESERVED);
+
+      const response = await server.get("/booking").set("Authorization", `Bearer ${token}`);
+
+      expect(response.status).toBe(httpStatus.FORBIDDEN);
+    });
+
+    it("should respond with status 403 if ticket isRemote true", async () => {
+      const user = await createUser();
+      const token = await generateValidToken(user);
+      const enrollment = await createEnrollmentWithAddress(user);
+      const ticketType = await createTicketTypeRemote();
+      await createTicket(enrollment.id, ticketType.id, TicketStatus.PAID);
+
+      const response = await server.get("/booking").set("Authorization", `Bearer ${token}`);
+
+      expect(response.status).toBe(httpStatus.FORBIDDEN);
+    });
+
+    it("should respond with status 403 if ticket has no Hotel", async () => {
+      const user = await createUser();
+      const token = await generateValidToken(user);
+      const enrollment = await createEnrollmentWithAddress(user);
+      const ticketType = await createTicketTypeWithOutHotel();
+      await createTicket(enrollment.id, ticketType.id, TicketStatus.PAID);
+
+      const response = await server.get("/booking").set("Authorization", `Bearer ${token}`);
+
+      expect(response.status).toBe(httpStatus.FORBIDDEN);
+    });
+
     it("should respond with status 404 if user doesnt have a reservation", async () => {
       const user = await createUser();
       const token = await generateValidToken(user);
@@ -127,6 +172,15 @@ describe("POST /booking", () => {
   });
 
   describe("when token is valid", () => {
+    it("should respond with status 404 if user doesnt have a enrollment", async () => {
+      const user = await createUser();
+      const token = await generateValidToken(user);
+
+      const response = await server.get("/booking").set("Authorization", `Bearer ${token}`);
+
+      expect(response.status).toBe(httpStatus.NOT_FOUND);
+    });
+
     it("should respond with status 403 if ticket status is not assign as PAID", async () => {
       const user = await createUser();
       const token = await generateValidToken(user);
@@ -278,6 +332,15 @@ describe("PUT /booking/:bookingId", () => {
       const response = await server.put("/booking/1").set("Authorization", `Bearer ${token}`).send({});
 
       expect(response.status).toBe(httpStatus.BAD_REQUEST);
+    });
+
+    it("should respond with status 404 if user doesnt have a enrollment", async () => {
+      const user = await createUser();
+      const token = await generateValidToken(user);
+
+      const response = await server.get("/booking").set("Authorization", `Bearer ${token}`);
+
+      expect(response.status).toBe(httpStatus.NOT_FOUND);
     });
 
     it("should respond with status 403 if user doesnt have valid booking", async () => {

@@ -12,7 +12,7 @@ async function validationUserStatus(userId: number) {
 
   const ticket = await ticketRepository.findTicketByEnrollmentId(enrollment.id);
 
-  if (!ticket || ticket.status === "RESERVED" || ticket.TicketType.isRemote || !ticket.TicketType.includesHotel) {
+  if (ticket.status === "RESERVED" || ticket.TicketType.isRemote || !ticket.TicketType.includesHotel) {
     throw cannotListHotelsError();
   }
 }
@@ -20,7 +20,6 @@ async function validationUserStatus(userId: number) {
 async function validateSelectRoom(roomId: number) {
   const selectRoom = await bookingRepository.findRoom(roomId);
   if (!selectRoom) throw notFoundError();
-  if (selectRoom.capacity === 0) throw requestError(403, "No Acess");
 
   const capacity = await bookingRepository.countRoomReservation(roomId);
   if (selectRoom.capacity - capacity === 0) {
@@ -29,6 +28,8 @@ async function validateSelectRoom(roomId: number) {
 }
 
 async function showBookingByUser(userId: number) {
+  await validationUserStatus(userId);
+
   const booking = await bookingRepository.findBookingByUserId(userId);
   if (!booking) {
     throw notFoundError();
